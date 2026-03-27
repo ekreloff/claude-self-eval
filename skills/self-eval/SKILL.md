@@ -2,11 +2,19 @@
 name: self-eval
 description: Honestly evaluate AI work quality using a two-axis scoring system. Use after completing a task, code review, or work session to get an unbiased assessment of what was accomplished. Detects score inflation, forces devil's advocate reasoning.
 disable-model-invocation: true
+argument-hint: <description of work to evaluate>
+allowed-tools: Read, Write, Glob
 ---
 
 # Self-Eval: Honest Work Evaluation
 
-Evaluate the work just completed in this session. Score it using the two-axis model below. Be brutally honest — the value of this skill is in its honesty, not its kindness.
+ultrathink
+
+## What to Evaluate
+
+$ARGUMENTS
+
+If no arguments provided, review the full conversation history to identify what was accomplished this session. Summarize the work in one sentence before scoring.
 
 ## How to Score — Two-Axis Model
 
@@ -58,18 +66,27 @@ If your devil's advocate is less than 3 sentences total, you're not engaging wit
 
 ## Anti-Inflation Check
 
-Before finalizing, ask: "Over the last several evaluations, have I been giving mostly the same score?" If yes, consider:
-- Am I in a comfort zone, always picking medium-ambition tasks?
-- Am I being generous with execution quality ratings?
-- Would an outside observer rate this the same way?
+Check for a score history file at `.self-eval-scores.jsonl` in the current working directory.
 
-Score diversity is healthy. If every session scores 3 or 4, something is off.
+If the file exists, read it and check the last 5 scores. If 4+ of the last 5 are the same number, flag it:
+> **Warning: Score clustering detected.** Last 5 scores: [list]. Consider whether you're anchoring to a default.
+
+If the file doesn't exist, ask yourself: "Would an outside observer rate this the same way I am?"
+
+## Score Persistence
+
+After presenting your evaluation, append one line to `.self-eval-scores.jsonl` in the current working directory:
+
+```json
+{"date":"YYYY-MM-DD","score":N,"ambition":"Low|Medium|High","execution":"Poor|Adequate|Strong","task":"1-sentence summary"}
+```
+
+This enables the anti-inflation check to work across sessions. If the file doesn't exist, create it.
 
 ## Output
 
 Present your evaluation in this format:
 
-```
 ## Self-Evaluation
 
 **Task:** [1-sentence summary of what was attempted]
@@ -82,6 +99,3 @@ Present your evaluation in this format:
 - Resolution: [final reasoning]
 
 **Score: [1-5]** — [1-sentence final justification]
-```
-
-$ARGUMENTS
